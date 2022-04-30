@@ -16,20 +16,27 @@ var serializeOptions = new JsonSerializerOptions
     WriteIndented = true
 };
 
-app.MapPost("/{command}",async   (HttpContext context, string command) =>
+app.MapPost("/{command}", async (HttpContext context, string command) =>
 {
     try
     {
 
-        var targetType = Assembly.GetExecutingAssembly()
+        var targetTypes = Assembly.GetExecutingAssembly()
                                .GetTypes()
                                .Where(t => t.GetCustomAttribute<CQRSBridge.Attribute.CommandName>()?.Command.ToLower() == command.ToLower())
-                               .SingleOrDefault();
+                               .ToList();
 
-        if (targetType == null)
+        if (targetTypes.Count() == 0)
         {
             return Result<EmptyDto>.Failure(new[] { $"Unable to find command { command }" });
         }
+
+        if (targetTypes.Count() > 1)
+        {
+            return Result<EmptyDto>.Failure(new[] { $"Multiple types were found with this command name.  Classes : { String.Join(",",targetTypes.Select(s=>s.Name)) }" });
+        }
+
+        var targetType = targetTypes[0];
 
         var a = Activator.CreateInstance(targetType);
 
