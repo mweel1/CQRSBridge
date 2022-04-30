@@ -33,16 +33,14 @@ app.MapPost("/{command}", async (HttpContext context, string command) =>
 
         if (targetTypes.Count() > 1)
         {
-            return Result<EmptyDto>.Failure(new[] { $"Multiple types were found with this command name.  Classes : { String.Join(",",targetTypes.Select(s=>s.Name)) }" });
+            return Result<EmptyDto>.Failure(new[] { $"Multiple types were found with this command name.  Types : { String.Join(",",targetTypes.Select(s=>s.Name)) }" });
         }
 
         var targetType = targetTypes[0];
 
         var a = Activator.CreateInstance(targetType);
 
-
         var o = await System.Text.Json.JsonSerializer.DeserializeAsync(context.Request.Body, targetType, serializeOptions);
-
 
         ISender Mediator = context.RequestServices.GetService<ISender>();
 
